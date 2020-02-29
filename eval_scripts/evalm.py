@@ -20,12 +20,12 @@ from collections import defaultdict as dd
 def distance(str1, str2):
     """Simple Levenshtein implementation for evalm."""
     m = np.zeros([len(str2)+1, len(str1)+1])
-    for x in xrange(1, len(str2) + 1):
+    for x in range(1, len(str2) + 1):
         m[x][0] = m[x-1][0] + 1
-    for y in xrange(1, len(str1) + 1):
+    for y in range(1, len(str1) + 1):
         m[0][y] = m[0][y-1] + 1
-    for x in xrange(1, len(str2) + 1):
-        for y in xrange(1, len(str1) + 1):
+    for x in range(1, len(str2) + 1):
+        for y in range(1, len(str1) + 1):
             if str1[y-1] == str2[x-1]:
                 dg = 0
             else:
@@ -62,14 +62,14 @@ def aggregate(golden, guesses):
     breakdown_N = dd(int)
     N = 0
     A, L, NL, R = 0.0, 0.0, 0.0, 0.0
-    for tag, gold in golden.items():
+    for tag, gold in list(golden.items()):
         
         if tag in guesses:
             guess = guesses[tag]
             # assumes only 1 golden analysis
             if len(gold) > 1:
                 for elem in gold[1:]:
-                    assert elem == gold[0], u"gold: {}, tag: {}".format(', '.join(gold), tag).encode('utf8')
+                    assert elem == gold[0], "gold: {}, tag: {}".format(', '.join(gold), tag).encode('utf8')
                     
             acc, lev, rank = evaluate(gold[0], guess)
             A, L, NL, R = A+acc, L+lev, NL+(lev / len(gold[0])), R+rank
@@ -103,7 +103,7 @@ def read_file(file_in, is_format2016=False, merge_same_keys=False):
             linest = line.strip()
             l = linest.split('\t')  # whitespace is a char!
             if len(l) != 3:
-                print 'Deleted too much!'
+                print('Deleted too much!')
                 l = l + ['']*(3-len(l))
             guess_id = [l[k] for k in key_ids]
             if merge_same_keys:
@@ -118,10 +118,10 @@ def read_file(file_in, is_format2016=False, merge_same_keys=False):
 
 
 def pp(A, L, NL, R):
-    print "Accuracy:", A
-    print "Mean Levenshtein:", L
-    print "Mean Normalized Levenshtein:", NL
-    print "Mean Reciprocal Rank:", R
+    print("Accuracy:", A)
+    print("Mean Levenshtein:", L)
+    print("Mean Normalized Levenshtein:", NL)
+    print("Mean Reciprocal Rank:", R)
         
 
 if __name__ == "__main__":
@@ -133,19 +133,19 @@ if __name__ == "__main__":
     parser.add_argument("--merge_same_keys", default=False, action='store_true')
     args = parser.parse_args()
     
-    print 'Evaluation script arguments: ', args
-    print
+    print('Evaluation script arguments: ', args)
+    print()
     golden = read_file(args.golden, is_format2016=args.format2016, merge_same_keys=args.merge_same_keys)
     guesses = read_file(args.guesses, is_format2016=args.format2016, merge_same_keys=args.merge_same_keys)
 
     try:
         A, L, NL, R, breakdown, breakdown_N = aggregate(golden, guesses)
-        for tag, (_A, _L, _NL, _R) in breakdown.items():
-            print tag
-            _N = breakdown_N[tag]
-            pp(_A / _N, _L / _N, _NL / _N, _R / _N)
-            print
-        print "Aggregate"
+        # for tag, (_A, _L, _NL, _R) in list(breakdown.items()):
+        #     print(tag)
+        #     _N = breakdown_N[tag]
+        #     pp(_A / _N, _L / _N, _NL / _N, _R / _N)
+        #     print()
+        print("Aggregate")
         pp(A, L, NL, R)
-    except ZeroDivisionError, e:
-        print 'Likely, using test file without gold predictions. Returning nothing!'
+    except ZeroDivisionError as e:
+        print('Likely, using test file without gold predictions. Returning nothing!')

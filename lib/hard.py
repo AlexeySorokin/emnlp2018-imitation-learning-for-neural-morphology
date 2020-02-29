@@ -1,4 +1,4 @@
-from __future__ import division
+
 
 import dynet as dy
 import numpy as np
@@ -11,7 +11,7 @@ from transducer import Transducer
 """ Reimplementation of Roee Aharoni & Joav Goldberg's hard-attention transducer model """
 
 def lemma2string(lemma, vocab):
-    return  u''.join(vocab.char.i2w[l] for l in lemma)
+    return  ''.join(vocab.char.i2w[l] for l in lemma)
 
 class Transducer(Transducer):
     
@@ -63,9 +63,9 @@ class Transducer(Transducer):
         count = 0
         
         if debug_mode:
-            print
-            if oracle_actions: print action2string(oracle_actions, self.vocab)
-            print lemma2string(lemma, self.vocab)
+            print()
+            if oracle_actions: print(action2string(oracle_actions, self.vocab))
+            print(lemma2string(lemma, self.vocab))
         
         while len(action_history) <= MAX_ACTION_SEQ_LEN:
             
@@ -73,10 +73,10 @@ class Transducer(Transducer):
             encoder_embedding, char_enc = encoder.embedding(extra=True)
             
             if debug_mode:
-                print 'Action history: ', action_history, action2string(action_history, self.vocab)
-                print 'Encoder length: ', len(encoder) 
-                print 'Current char: ', char_enc, lemma2string([char_enc], self.vocab)
-                print 'Word so far: ', u''.join(word)
+                print('Action history: ', action_history, action2string(action_history, self.vocab))
+                print('Encoder length: ', len(encoder)) 
+                print('Current char: ', char_enc, lemma2string([char_enc], self.vocab))
+                print('Word so far: ', ''.join(word))
 
             # decoder
             decoder_input = dy.concatenate([encoder_embedding,
@@ -123,7 +123,7 @@ class Transducer(Transducer):
                 char_ = self.vocab.act.i2w[action]
                 word.append(char_)
                 
-        word = u''.join(word)
+        word = ''.join(word)
         return losses, word, action_history
     
     def beam_search_decode(self, lemma, feats, external_cg=True, unk_avg=True, beam_width=4):
@@ -219,7 +219,7 @@ class Transducer(Transducer):
                     #  * expansion should be taken off the beam and
                     # stored to final hypotheses set
                     beam_width -= 1
-                    complete_hypotheses.append((log_p, log_p_expr, u''.join(word), prev_actions))
+                    complete_hypotheses.append((log_p, log_p_expr, ''.join(word), prev_actions))
                 else:
                     if action == STEP:
                         encoder.pop()
@@ -234,7 +234,7 @@ class Transducer(Transducer):
         
         if not complete_hypotheses:
             # nothing found because the model is so crappy
-            complete_hypotheses = [(log_p, log_p_expr, u''.join(word), prev_actions) for _, _, prev_actions, log_p, log_p_expr, word in beam]
+            complete_hypotheses = [(log_p, log_p_expr, ''.join(word), prev_actions) for _, _, prev_actions, log_p, log_p_expr, word in beam]
 
         complete_hypotheses.sort(key=lambda h: h[0], reverse=True)
         # print u'Complete hypotheses:'

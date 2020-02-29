@@ -2,33 +2,33 @@ import os
 import codecs
 
 #import datasets
-from defaults import EVALM_PATH, COPY, DELETE, END_WORD, END_WORD_CHAR, BEGIN_WORD_CHAR
+from .defaults import EVALM_PATH, COPY, DELETE, END_WORD, END_WORD_CHAR, BEGIN_WORD_CHAR
 
 def write_stats_file(dev_accuracy, paths, data_arguments, model_arguments, optim_arguments):
 
     with open(paths['stats_file_path'], 'w') as w:
 
-        print >> w, 'LANGUAGE: {}, REGIME: {}'.format(paths['lang'], paths['regime'])
-        print >> w, 'Train path:   {}'.format(paths['train_path'])
-        print >> w, 'Dev path:     {}'.format(paths['dev_path'])
-        print >> w, 'Test path:    {}'.format(paths['test_path'])
-        print >> w, 'Results path: {}'.format(paths['results_file_path'])
+        print('LANGUAGE: {}, REGIME: {}'.format(paths['lang'], paths['regime']), file=w)
+        print('Train path:   {}'.format(paths['train_path']), file=w)
+        print('Dev path:     {}'.format(paths['dev_path']), file=w)
+        print('Test path:    {}'.format(paths['test_path']), file=w)
+        print('Results path: {}'.format(paths['results_file_path']), file=w)
 
-        for k, v in paths.iteritems():
+        for k, v in paths.items():
             if k not in ('lang', 'regime', 'train_path', 'dev_path',
                          'test_path', 'results_file_path'):
-                print >> w, '{:20} = {}'.format(k, v)
-        print >> w
+                print('{:20} = {}'.format(k, v), file=w)
+        print(file=w)
 
         for name, args in (('DATA ARGS:', data_arguments),
                            ('MODEL ARGS:', model_arguments),
                            ('OPTIMIZATION ARGS:', optim_arguments)):
-            print >> w, name
-            for k, v in args.iteritems():
-                print >> w, '{:20} = {}'.format(k, v)
-            print >> w
+            print(name, file=w)
+            for k, v in args.items():
+                print('{:20} = {}'.format(k, v), file=w)
+            print(file=w)
 
-        print >> w, 'DEV ACCURACY (internal evaluation) = {}'.format(dev_accuracy)
+        print('DEV ACCURACY (internal evaluation) = {}'.format(dev_accuracy), file=w)
 
 
 def external_eval(output_path, gold_path, batches, predictions, sigm2017format, evalm_path=EVALM_PATH):
@@ -37,11 +37,11 @@ def external_eval(output_path, gold_path, batches, predictions, sigm2017format, 
     eval_path = output_path + 'eval'
 
     if sigm2017format is True:
-        line = u'{LEM}\t{PRE}\t{FET}\n'
+        line = '{LEM}\t{PRE}\t{FET}\n'
         format_flag = ''
         merge_keys_flag = '--merge_same_keys'
     else:
-        line = u'{LEM}\t{FET}\t{PRE}\n'
+        line = '{LEM}\t{FET}\t{PRE}\n'
         format_flag = '--format2016'
         merge_keys_flag = ''
 
@@ -55,7 +55,7 @@ def external_eval(output_path, gold_path, batches, predictions, sigm2017format, 
             evalm_path, gold_path, pred_path, format_flag, merge_keys_flag, eval_path))
 
 
-def alignment(lemma, prediction, actions, action_string, EPSILON=u"\u2002"):
+def alignment(lemma, prediction, actions, action_string, EPSILON="\u2002"):
     # lemma as str, prediction as str, actions as list of indices
     # pad prediction
     lemma = BEGIN_WORD_CHAR + lemma + END_WORD_CHAR

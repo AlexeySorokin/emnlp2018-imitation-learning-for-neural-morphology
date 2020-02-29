@@ -41,16 +41,16 @@ libalign_align_init.restype = None
 
 class Aligner:
 
-    def __init__(self, wordpairs, align_symbol = u' ', iterations = 150, burnin = 5, lag = 1, mode = 'crp'):
-        s = set(u''.join((x[0] + x[1] for x in wordpairs)))
-        self.symboltoint = dict(zip(s, xrange(1,len(s)+1)))
-        self.inttosymbol = {v:k for k, v in self.symboltoint.items()}
+    def __init__(self, wordpairs, align_symbol = ' ', iterations = 150, burnin = 5, lag = 1, mode = 'crp'):
+        s = set(''.join((x[0] + x[1] for x in wordpairs)))
+        self.symboltoint = dict(list(zip(s, list(range(1,len(s)+1)))))
+        self.inttosymbol = {v:k for k, v in list(self.symboltoint.items())}
         self.inttosymbol[0] = align_symbol
         ## Map stringpairs to -1 terminated integer sequences ##
         intpairs = []
         for i, o in wordpairs:
-            intin = map(lambda x: self.symboltoint[x], i) + [-1]
-            intout = map(lambda x: self.symboltoint[x], o) + [-1]
+            intin = [self.symboltoint[x] for x in i] + [-1]
+            intout = [self.symboltoint[x] for x in o] + [-1]
             intpairs.append((intin, intout))
 
         libalign_align_init()
