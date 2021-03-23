@@ -674,6 +674,7 @@ class Transducer(object):
             # get action (argmax, sampling, or use oracle actions)
             if oracle_actions is None:
                 # predicting by argmax or sampling
+                logits_cpu = logits # dy.to_device(logits, 'CPU')
                 log_probs = dy.log_softmax(logits, valid_actions)
                 log_probs_np = log_probs.npvalue()
                 if sampling:
@@ -685,6 +686,7 @@ class Transducer(object):
                 # training with dynamic oracle
                 if rollout_on or (not dynamic['global_rollout'] and np.random.rand() > dynamic['rollout_mixin_beta']):
                     # the second disjunct allows for model roll-out applied locally
+                    logits_cpu = logits # dy.to_device(logits, 'CPU')
                     rollout = lambda action: self.rollout(action, dy.log_softmax(logits, valid_actions),
                                                           action_history, features, decoder, encoder, word,
                                                           W_act, b_act)  # @TODO W_s2h ...
@@ -697,7 +699,7 @@ class Transducer(object):
                                                            bias_inserts=dynamic['bias_inserts'],
                                                            errors=generation_errors,
                                                            verbose=verbose)
-
+                logits_cpu = logits # dy.to_device(logits, 'CPU')
                 log_probs = dy.log_softmax(logits, valid_actions)
                 log_probs_np = log_probs.npvalue()
                 if sampling == 1. or np.random.rand() <= sampling:
@@ -829,6 +831,7 @@ class Transducer(object):
                     h = classifier_input
 
                 logits = W_act * h + b_act
+                logits_cpu = logits # dy.to_device(logits, 'CPU')
                 log_probs = dy.log_softmax(logits, valid_actions)
                 action = np.argmax(log_probs.npvalue())
 
@@ -945,6 +948,7 @@ class Transducer(object):
                 else:
                     h = classifier_input
                 logits = W_act * h + b_act
+                # logits_cpu = logits # dy.to_device(logits, 'CPU')
                 log_probs_expr = dy.log_softmax(logits, valid_actions)
                 log_probs = log_probs_expr.npvalue()
                 top_actions = np.argsort(log_probs)[-beam_width:]

@@ -34,8 +34,9 @@ class BaseDataSample(object):
             self.word_str, self.feat_repr, self.tag_wraps)
 
     @classmethod
-    def from_row(cls, vocab, tag_wraps, verbose, row, sigm2017format=True,
-                 no_feat_format=False, pos_emb=True, avm_feat_format=False):
+    def from_row(cls, vocab, tag_wraps, verbose, row,  prefix=None,
+                 sigm2017format=True, no_feat_format=False, 
+                 pos_emb=True, avm_feat_format=False):
         if sigm2017format:
             lemma_str, word_str, feat_str = row
             feats_delimiter = u';'
@@ -51,6 +52,9 @@ class BaseDataSample(object):
         assert isinstance(feat_str, str), feat_str
         # `avm_feat_format=True` implies that `pos_emb=False`
         if avm_feat_format: assert not pos_emb
+        if prefix:
+            lemma_str = [prefix] + list(lemma_str)
+            word_str = [prefix] + list(word_str)
         # encode lemma characters
         lemma = [vocab.char[c] for c in lemma_str]
         # encode word
@@ -59,7 +63,7 @@ class BaseDataSample(object):
         if pos_emb:
             # encode features and, separately, pos
             pos = vocab.pos[feats[0]]
-            feats = [vocab.feat[f] for f in set(feats[1:])]
+            feats = [vocab.feat[f] for f in sorted(set(feats[1:]))]
         else:
             pos = None
             if avm_feat_format:
@@ -131,8 +135,11 @@ class BaseDataSet(object):
 
     @classmethod
     def from_file(cls, filename, vocab, DataSample=BaseDataSample,
-                  encoding='utf8', delimiter=u'\t', sigm2017format=True, no_feat_format=False,
-                  pos_emb=True, avm_feat_format=False, tag_wraps='both', verbose=True, **kwargs):
+                  encoding='utf8', delimiter=u'\t', use_language=False,
+                  sigm2017format=True, no_feat_format=False,
+                  pos_emb=True, avm_feat_format=False, 
+                  tag_wraps='both', verbose=True, 
+                  **kwargs):
         # filename (str):   tab-separated file containing morphology reinflection data:
         #                   lemma word feat1;feat2;feat3...
         training_data = True if 'train' in os.path.basename(filename) else False
@@ -149,12 +156,20 @@ class BaseDataSet(object):
                 print('Attribute-value feature matrix implies that no specialized pos embedding is used.')
                 pos_emb = False
 
-        with open(filename, encoding=encoding) as f:
-            for row in f:
-                split_row = row.strip().split(delimiter)
-                sample = DataSample.from_row(vocab, tag_wraps, verbose, split_row,
-                                             sigm2017format, no_feat_format, pos_emb, avm_feat_format)
-                datasamples.append(sample)
+        filenames = filename.split(",")
+        for i, infile in enumerate(filenames):
+            infile_without_path = os.path.split(infile)[-1]
+            prefix = "<" + infile_without_path.split("-")[0] + ">" if use_language else None
+            with open(infile, encoding=encoding) as f:
+                for row in f:
+                    split_row = row.strip().split(delimiter)
+                    sample = DataSample.from_row(vocab, tag_wraps, verbose, split_row,
+                                                 prefix=prefix,
+                                                 sigm2017format=sigm2017format, 
+                                                 no_feat_format=no_feat_format, 
+                                                 pos_emb=pos_emb, 
+                                                 avm_feat_format=avm_feat_format)
+                    datasamples.append(sample)
 
         return cls(filename=filename, samples=datasamples, vocab=vocab,
                    training_data=training_data, tag_wraps=tag_wraps, verbose=verbose, **kwargs)
@@ -169,11 +184,12 @@ class NonAlignedDataSet(BaseDataSet):
             assert isinstance(vocab, EditVocab)
         else:
             vocab = EditVocab(pos_emb=pos_emb, avm_feat_format=avm_feat_format,
-                                 param_tying=param_tying)
+                              param_tying=param_tying)
         print(vocab)
         #return super(NonAlignedDataSet, cls).from_file(filename, vocab, , **kwargs)
         ds = super(NonAlignedDataSet, cls).from_file(filename, vocab, DataSample=NonAlignedDataSample,
-                                                       pos_emb=pos_emb, avm_feat_format=avm_feat_format, **kwargs)
+                                                     pos_emb=pos_emb, avm_feat_format=avm_feat_format, 
+                                                     **kwargs)
         print('Number of actions: {}'.format(len(ds.vocab.act)))
         print(u'Action set: {}'.format(' '.join(sorted(ds.vocab.act.keys()))))
         return ds

@@ -94,9 +94,12 @@ def process_data_arguments(arguments):
     else:
         dset = datasets.EditDataSet
 
+
+
     return {
         'dataset'       : dset,
         'aligner'       : aligner,
+        'use_language'  : arguments["--use-language-as-prefix"],
         'sigm2017format': arguments['--sigm2017format'],
         'no_feat_format': arguments['--no-feat-format'],
         'try_reverse'   : arguments['--try-reverse'],

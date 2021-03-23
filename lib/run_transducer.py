@@ -2,7 +2,7 @@
 
 Usage:
   run_transducer.py [--dynet-seed SEED] [--dynet-mem MEM] [--dynet-autobatch ON]
-  [--transducer=TRANSDUCER] [--sigm2017format] [--no-feat-format]
+  [--transducer=TRANSDUCER] [--languages=LANGUAGES] [--sigm2017format] [--no-feat-format]
   [--input=INPUT] [--feat-input=FEAT] [--action-input=ACTION] [--pos-emb] [--avm-feat-format]
   [--enc-hidden=HIDDEN] [--dec-hidden=HIDDEN] [--enc-layers=LAYERS] [--dec-layers=LAYERS]
   [--vanilla-lstm] [--mlp=MLP] [--nonlin=NONLIN] [--lucky-w=W]
@@ -15,7 +15,8 @@ Usage:
   [--alpha=ALPHA] [--beta=BETA] [--no-baseline]
   [--il-decay=DECAY] [--il-k=K] [--il-tforcing-epochs=EPOCHS] [--il-beta=BETA] [--il-global-rollout]
   [--il-loss=LOSS] [--il-optimal-oracle] [--il-bias-inserts]
-  TRAIN-PATH DEV-PATH RESULTS-PATH [--test-path=TEST-PATH] [--reload-path=RELOAD-PATH]
+  TRAIN-PATH DEV-PATH RESULTS-PATH [--test-path=TEST-PATH] 
+  [--use-language-as-prefix] [--reload-path=RELOAD-PATH]
 
 Arguments:
   TRAIN-PATH    destination path, possibly relative to "data/all/", e.g. task1/albanian-train-low
@@ -98,19 +99,22 @@ Options:
   --beam-widths=WIDTHS          a comma-separated sequence of beam widths for the final (dev/test) decoding with beam
                                     search
   --test-path=TEST-PATH         test set path
+  --use-language-as-prefix      whether to prepend words with language prefix
   --reload-path=RELOAD-PATH     reload a pretrained model at this path (possibly relative to RESULTS-PATH)
 """
 
 from __future__ import division
 from docopt import docopt
 
+import dynet_config
+dynet_config.set_gpu()
 import dynet as dy
 import numpy as np
 import random
 import sys, codecs
 
 from args_processor import process_arguments
-from datasets import BaseDataSet
+from datasets import BaseDataSet, EditDataSet, NonAlignedDataSet
 from trainer import TrainingSession, dev_external_eval, test_external_eval
 
 # sys.stdout = codecs.getwriter('utf-8')(sys.__stdout__)
@@ -130,10 +134,12 @@ if __name__ == "__main__":
     paths, data_arguments, model_arguments, optim_arguments = arguments
 
     print('Loading data... Dataset: {}'.format(data_arguments['dataset']))
-    train_data = data_arguments['dataset'].from_file(paths['train_path'], **data_arguments)
+    # train_data = data_arguments['dataset'].from_file(paths['train_path'], **data_arguments)
+    train_data = NonAlignedDataSet.from_file(paths['train_path'], **data_arguments)
     VOCAB = train_data.vocab
     VOCAB.train_cutoff()  # knows that entities before come from train set
     dev_data = data_arguments['dataset'].from_file(paths['dev_path'], vocab=VOCAB, **data_arguments)
+    # dev_data = BaseDataSet.from_file(paths['dev_path'], vocab=VOCAB, **data_arguments)
     if paths['test_path']:
         # no alignments, hence BaseDataSet
         test_data = BaseDataSet.from_file(paths['test_path'], vocab=VOCAB, **data_arguments)

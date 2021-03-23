@@ -2,7 +2,7 @@ import os
 import codecs
 
 #import datasets
-from .defaults import EVALM_PATH, COPY, DELETE, END_WORD, END_WORD_CHAR, BEGIN_WORD_CHAR
+from defaults import EVALM_PATH, COPY, DELETE, END_WORD, END_WORD_CHAR, BEGIN_WORD_CHAR
 
 def write_stats_file(dev_accuracy, paths, data_arguments, model_arguments, optim_arguments):
 
